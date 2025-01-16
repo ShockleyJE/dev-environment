@@ -1,8 +1,7 @@
-- name: Install System Packages 1 (mise)
+- name: Install Mise
   become: true
   shell: curl https://mise.run | sh
   tags:
     - install
     - core
     - mise
-
