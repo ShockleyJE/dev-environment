@@ -11,19 +11,36 @@
     recursive: yes
     update: yes
     accept_hostkey: yes
-    version: main
+    version: stow 
+  tags:
+    - install
+    - dotfiles
+    - stow
+- name: Change permission on install file
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.dotfiles/install"
+    state: file
+    #owner: root
+    #group: root
+    mode: 0755
+  tags:
+    - install
+    - dotfiles
+    - stow
+- name: Change permission on ubuntu file
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.dotfiles/ubuntu"
+    state: file
+    #owner: root
+    #group: root
+    mode: 0755
   tags:
     - install
     - dotfiles
     - stow
 - name: Init dotfiles
-  shell: chmod +x $HOME/.dotfiles/init.sh && $HOME/.dotfiles/init.sh
+  shell: cd $HOME/.dotfiles && ./ubuntu
   tags:
     - install
     - dotfiles
-      #- name: Stow dotfiles
-      #shell: cd $HOME/.dotfiles && ./ubuntu
-      #tags:
-      #- install
-      #- dotfiles
-      #- stow
+    - stow 
