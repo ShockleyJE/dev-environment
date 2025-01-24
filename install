@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-sudo apt install software-properties-common
-sudo apt-add-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
+
+if [[ "$(uname)" == "Ubuntu" ]]; then
+    echo "Installing for Ubuntu"
+    chmod +x ./ubuntu && ./ubuntu
+fi
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    echo "Installing for MacOS"
+    chmod +x ./macos && ./macos
+fi
 
