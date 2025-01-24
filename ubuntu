@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
-sudo apt install software-properties-common
-sudo apt-add-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
 
+# Function to check if we need to use sudo
+needs_sudo() {
+    if [ "$EUID" -ne 0 ]; then
+        return 0  # Need sudo
+    else
+        return 1  # Don't need sudo
+    fi
+}
+
+# Function to run a command with sudo if needed
+run_with_sudo() {
+    if needs_sudo; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
+
+run_with_sudo apt install software-properties-common
+run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible
+run_with_sudo apt install ansible
