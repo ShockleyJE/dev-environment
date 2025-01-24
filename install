@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ "$(uname)" == "Ubuntu" ]]; then
-    echo "Installing for Ubuntu"
-    chmod +x ./ubuntu && ./ubuntu
+if [[ "$(uname)" == "Linux" ]]; then
+    NAME=$(grep '^NAME=' /etc/os-release | cut -d '=' -f 2- | tr -d '"')
+    if NAME == "Ubuntu"; then
+        echo "Installing for Ubuntu"
+        chmod +x ./ubuntu && ./ubuntu
+    fi
 fi
 
 if [[ "$(uname)" == "Darwin" ]]; then
