@@ -21,3 +21,5 @@ run_with_sudo() {
 run_with_sudo apt install software-properties-common
 run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible
 run_with_sudo apt install ansible
+
+ansible-playbook local.yml
