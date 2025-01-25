@@ -1,21 +1,61 @@
-- name: Installing stow
-  apt: name=stow
+- name: Installing stow on dnf-based systems (Fedora)
+  dnf:
+    name: stow
+  become: true
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - dotfiles
     - stow
-- name: Cloning .dotfiles
-  ansible.builtin.git:
+
+- name: Installing stow on apt-based systems (Ubuntu)
+  apt:
+    name: stow
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - dotfiles
+    - stow
+
+- name: Ensure .dotfiles directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/.dotfiles"
+  register: dotfiles_stat
+  tags:
+    - install
+    - dotfiles
+    - stow
+
+- name: Cloning .dotfiles (only if not present)
+  git:
     repo: 'https://github.com/ShockleyJE/.dotfiles.git'
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
-    recursive: yes
-    update: yes
-    accept_hostkey: yes
     version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: dotfiles_stat.stat.exists == False
   tags:
     - install
     - dotfiles
     - stow
+
+
+- name: Pull latest changes for .dotfiles (if already cloned)
+  git:
+    repo: 'https://github.com/ShockleyJE/.dotfiles.git'
+    dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
+    version: main
+    update: yes
+    force: true 
+    accept_hostkey: yes
+  when: dotfiles_stat.stat.exists == True
+  tags:
+    - install
+    - dotfiles
+    - stow
+
 - name: Change permission on install file
   file:
     path: "{{ lookup('env', 'HOME') }}/.dotfiles/install"
@@ -34,13 +74,45 @@
     #owner: root
     #group: root
     mode: 0755
+  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - dotfiles
     - stow
-- name: Init dotfiles
-  shell: cd $HOME/.dotfiles && ./ubuntu
+- name: Change permission on Fedora file
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.dotfiles/fedora"
+    state: file
+    #owner: root
+    #group: root
+    mode: 0755
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - dotfiles
+    - stow
+- name: Init dotfiles (Fedora)
+  shell: cd $HOME/.dotfiles && ./fedora
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - dotfiles
     - stow 
+- name: Init dotfiles (Ubuntu)
+  shell: cd $HOME/.dotfiles && ./ubuntu
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - dotfiles
+    - stow 
+
+- name: Execute a new zsh shell to apply changes immediately
+  shell: exec zsh
+  tags:
+    - install
+    - productivity
+    - dotfiles
+    - zsh
+  become: true
+  become_user: "{{ username }}"
+  when: ansible_facts['user_shell'] != '/bin/zsh'

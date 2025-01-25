@@ -2,9 +2,14 @@
 
 if [[ "$(uname)" == "Linux" ]]; then
     NAME=$(grep '^NAME=' /etc/os-release | cut -d '=' -f 2- | tr -d '"')
+    echo "Name: $NAME"
     if [[ "$NAME" == "Ubuntu" ]]; then
         echo "Installing for Ubuntu"
         chmod +x ./ubuntu && ./ubuntu
+    fi
+    if [[ "$NAME" == "Fedora Linux" ]]; then
+        echo "Installing for Fedora"
+        chmod +x ./fedora && ./fedora
     fi
 fi
 
@@ -12,4 +17,3 @@ if [[ "$(uname)" == "Darwin" ]]; then
     echo "Installing for MacOS"
     chmod +x ./macos && ./macos
 fi
-
