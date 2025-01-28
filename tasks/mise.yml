@@ -1,5 +1,4 @@
 - name: Install Mise
-  become: true
   become_user: "{{ username }}"
   shell: curl https://mise.run | sh 
   tags:
@@ -7,7 +6,6 @@
     - mise
     - core
 - name: Install Mise deps
-  become: true
   become_user: "{{ username }}"
   shell: zsh -c "mise install"
   tags:

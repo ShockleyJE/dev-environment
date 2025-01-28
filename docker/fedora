@@ -1,0 +1,18 @@
+FROM fedora:40 AS base
+WORKDIR /usr/local/bin
+RUN dnf install -y curl git && \
+    dnf install -y curl git ansible 
+
+FROM base AS prime
+ARG TAGS
+RUN groupadd --gid 1000 james 
+#RUN useradd --comment "James User" --create-home --shell /bin/bash --uid 1000 --gid 1000 james
+RUN useradd --comment "James User" --uid 1000 --gid 1000 james
+#RUN useradd --comment james --uid 1000 --gid 1000 
+RUN passwd --delete james  # Remove the password requirement
+USER james 
+WORKDIR /home/james
+
+FROM prime
+COPY . .
+CMD ["sh", "-c", "ansible-playbook $TAGS local.yml"]
