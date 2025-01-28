@@ -113,6 +113,5 @@
     - productivity
     - dotfiles
     - zsh
-  become: true
   become_user: "{{ username }}"
   when: ansible_facts['user_shell'] != '/bin/zsh'
