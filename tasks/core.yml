@@ -1,0 +1,7 @@
+- name: Install core utils on dnf-based systems (Fedora)
+  dnf:
+    name: fzf
+  when: ansible_facts.distribution == "Fedora" 
+  tags:
+    - install
+    - core 
