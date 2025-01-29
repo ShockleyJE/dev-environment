@@ -1,0 +1,33 @@
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning dev-environment (only if not present)
+  git:
+    repo: 'https://github.com/ShockleyJE/dev-environment.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/dev-environment"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
+
+- name: Pull latest changes for dev-environment (if already cloned)
+  git:
+    repo: 'https://github.com/ShockleyJE/dev-environment.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/dev-environment"
+    version: main
+    update: yes
+    force: true 
+    accept_hostkey: yes
+  when: prj_stat.stat.exists == True 
+  tags: 
+    - install
+    - prj

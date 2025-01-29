@@ -21,4 +21,5 @@
     - include_tasks: tasks/git-setup.yml
     - include_tasks: tasks/zsh-setup.yml
     - include_tasks: tasks/dotfiles.yml
+    - include_tasks: tasks/projects.yml
     - include_tasks: tasks/mise.yml
