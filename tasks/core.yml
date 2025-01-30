@@ -1,8 +1,22 @@
 - name: Install core utils on dnf-based systems (Fedora)
   dnf:
-    name: ["fzf","vim-enhanced"]
+    name: ["fzf","vim-enhanced","alacritty"]
   become: true
   when: ansible_facts.distribution == "Fedora" 
+  tags:
+    - install
+    - core 
+- name: Enable Copr for lazygit
+  become: true
+  community.general.copr:
+    name: atim/lazygit
+  tags:
+    - install
+    - core 
+- name: Install core utils on dnf-based systems (Fedora)
+  dnf:
+    name: ["lazygit"]
+  become: true
   tags:
     - install
     - core 

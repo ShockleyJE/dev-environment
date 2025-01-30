@@ -5,6 +5,13 @@
     - install
     - mise
     - core
+- name: Trust mise 
+  become_user: "{{ username }}"
+  shell: zsh -c "mise trust"
+  tags:
+    - install
+    - core
+    - mise
 - name: Install Mise deps
   become_user: "{{ username }}"
   shell: zsh -c "mise install"

@@ -29,7 +29,7 @@
 
 - name: Cloning .dotfiles (only if not present)
   git:
-    repo: 'https://github.com/ShockleyJE/.dotfiles.git'
+    repo: 'git@github.com:ShockleyJE/.dotfiles.git'
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
     version: main
     recursive: yes
@@ -46,6 +46,7 @@
   git:
     repo: 'https://github.com/ShockleyJE/.dotfiles.git'
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
+    recursive: yes
     version: main
     update: yes
     force: true 
