@@ -1,23 +1,5 @@
 #!/usr/bin/env bash
 
-# Function to check if we need to use sudo
-needs_sudo() {
-    if [ "$EUID" -ne 0 ]; then
-        return 0  # Need sudo
-    else
-        return 1  # Don't need sudo
-    fi
-}
+sudo dnf install -y ansible 
 
-# Function to run a command with sudo if needed
-run_with_sudo() {
-    if needs_sudo; then
-        sudo "$@"
-    else
-        "$@"
-    fi
-}
-
-run_with_sudo dnf install -y ansible 
-
-ansible-playbook local.yml -vvv
+ansible-playbook local.yml -vvv --ask-become-pass --ask-vault-pass

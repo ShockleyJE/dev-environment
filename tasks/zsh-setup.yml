@@ -11,6 +11,7 @@
 - name: Install ZSH on dnf-based systems (Fedora)
   dnf:
     name: zsh
+  become: true
   when: ansible_facts.distribution == "Fedora" 
   tags:
     - install
@@ -21,6 +22,7 @@
 - name: Install additional wares 
   dnf:
     name: which
+  become: true
   when: ansible_facts.distribution == "Fedora" 
   tags:
     - install
@@ -29,7 +31,8 @@
     - zsh
 
 - name: Change shell to zsh
-  shell: chsh -s $(which zsh)
+  shell: chsh -s $(which zsh) $username
+  become: true
   tags:
     - install
     - productivity
