@@ -1,9 +1,7 @@
 - hosts: localhost
   vars:
-    source_key: ~/.dotfiles/ssh/.ssh/personal
-    dest_key: ~/.dotfiles/ssh/.ssh/personal
-    #source_key: "./.ssh/id_rsa"
-    #dest_key: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+    source_key: ./.ssh/personal
+    dest_key: "{{ lookup('env', 'HOME') }}/.ssh/personal"
     personal: "{{ lookup('env', 'HOME') }}/personal"
     username: "james"
   pre_tasks:
