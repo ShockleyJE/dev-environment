@@ -13,10 +13,26 @@
   tags:
     - install
     - core 
-- name: Install core utils on dnf-based systems (Fedora)
+- name: Install lazygit on dnf-based systems (Fedora)
   dnf:
     name: ["lazygit"]
   become: true
   tags:
     - install
     - core 
+- name: Enable Copr for openvpn 
+  become: true
+  community.general.copr:
+    name: dsommers/openvpn3
+  tags:
+    - install
+    - core
+    - vpn 
+- name: Install openvpn on dnf-based systems (Fedora)
+  dnf:
+    name: ["openvpn3-client"]
+  become: true
+  tags:
+    - install
+    - core 
+    - vpn

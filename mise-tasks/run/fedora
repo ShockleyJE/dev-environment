@@ -1,0 +1,2 @@
+#!/usr/bin/env zsh
+ansible-playbook local.yml --ask-become-pass --ask-vault-pass
