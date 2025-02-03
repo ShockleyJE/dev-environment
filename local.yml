@@ -22,5 +22,6 @@
     - include_tasks: tasks/dotfiles.yml
     - include_tasks: tasks/ssh.yml
     - include_tasks: tasks/vpn.yml
+    - include_tasks: tasks/motif.yml
     - include_tasks: tasks/projects.yml
     - include_tasks: tasks/mise.yml

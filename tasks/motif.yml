@@ -1,0 +1,8 @@
+- name: Copy secrets 
+  copy:
+    src: "./motif/.secrets"
+    dest: "~/.secrets"
+    mode: 0600
+  tags:
+    - vpn
+    - install
