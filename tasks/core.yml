@@ -27,7 +27,7 @@
   tags:
     - install
     - core
-    - vpn 
+    - vpn
 - name: Install openvpn on dnf-based systems (Fedora)
   dnf:
     name: ["openvpn3-client"]
@@ -36,3 +36,10 @@
     - install
     - core 
     - vpn
+- name: Install motif 'wares 
+  dnf:
+    name: ["psql","chromium"]
+  become: true
+  tags:
+    - install
+    - core 
