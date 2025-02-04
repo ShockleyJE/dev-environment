@@ -31,3 +31,46 @@
   tags: 
     - install
     - prj
+
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj/ambr-client"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning ambr client
+  git:
+    repo: 'git@gitlab.com:ambr1/ambr-client.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/ambr-client"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
+
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj/ambr-data-service"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning ambr data service
+  git:
+    repo: 'git@gitlab.com:ambr1/ambr-data-service.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/ambr-data-service"
+    version: master 
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
+
