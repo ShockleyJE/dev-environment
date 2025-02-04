@@ -5,7 +5,16 @@
   when: ansible_facts.distribution == "Fedora" 
   tags:
     - install
-    - core 
+    - core
+ 
+- name: Install flatpak wares
+  community.general.flatpak:
+    name: ["md.obsidian.Obsidian","io.dbeaver.DBeaverCommunity"]
+  become: true
+  tags:
+    - install
+    - core
+
 - name: Enable Copr for lazygit
   become: true
   community.general.copr:
