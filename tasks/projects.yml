@@ -19,19 +19,6 @@
     - install
     - prj
 
-- name: Pull latest changes for dev-environment (if already cloned)
-  git:
-    repo: 'https://github.com/ShockleyJE/dev-environment.git'
-    dest: "{{ lookup('env', 'HOME') }}/prj/dev-environment"
-    version: main
-    update: yes
-    force: true 
-    accept_hostkey: yes
-  when: prj_stat.stat.exists == True 
-  tags: 
-    - install
-    - prj
-
 - name: Ensure prj directory exists
   stat:
     path: "{{ lookup('env', 'HOME') }}/prj/ambr-client"
