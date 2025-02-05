@@ -1,6 +1,6 @@
 - name: Install core utils on dnf-based systems (Fedora)
   dnf:
-    name: ["fzf","vim-enhanced","alacritty", "steam","dnf-plugins-core"]
+    name: ["fzf","vim-enhanced","alacritty", "steam","dnf-plugins-core","neovim"]
   become: true
   when: ansible_facts.distribution == "Fedora" 
   tags:
