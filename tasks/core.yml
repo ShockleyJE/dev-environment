@@ -1,12 +1,41 @@
 - name: Install core utils on dnf-based systems (Fedora)
   dnf:
-    name: ["fzf","vim-enhanced","alacritty", "steam"]
+    name: ["fzf","vim-enhanced","alacritty", "steam","dnf-plugins-core"]
   become: true
   when: ansible_facts.distribution == "Fedora" 
   tags:
     - install
     - core
- 
+
+- name: Install docker repository
+  command: dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
+  become: true
+  tags:
+    - install
+    - core
+
+- name: Install docker & utils
+  dnf:
+    name: ["docker-ce", "docker-ce-cli", "containerd.io","docker-buildx-plugin","docker-compose-plugin"]
+  become: true
+  when: ansible_facts.distribution == "Fedora" 
+  tags:
+    - install
+    - core
+
+- name: Enable docker
+  systemd_service:
+    name: docker
+    enabled: true
+  become: yes
+  
+- name: Add user '{{ username }}' to docker group
+  user:
+    name: '{{ username }}'
+    groups: docker
+    append: yes
+  become: yes
+
 - name: Install flatpak wares
   community.general.flatpak:
     name: ["md.obsidian.Obsidian","io.dbeaver.DBeaverCommunity"]
