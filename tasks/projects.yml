@@ -61,3 +61,23 @@
     - install
     - prj
 
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj/obsidian"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning ambr data service
+  git:
+    repo: 'git@github.com:ShockleyJE/obsidian.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/obsidian"
+    version: master 
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
