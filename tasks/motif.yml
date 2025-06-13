@@ -25,3 +25,14 @@
     state: started
   tags:
     - vpn
+
+- name: Install Zoom (Ubuntu)
+  become: true
+  apt:
+    deb: https://zoom.us/client/latest/zoom_amd64.deb
+    state: present
+    update_cache: yes
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - zoom
