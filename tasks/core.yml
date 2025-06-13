@@ -7,18 +7,66 @@
     - install
     - core
 
-- name: Install docker repository
-  command: dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
+- name: Install core utils on apt-based systems (Ubuntu)
+  apt:
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential"]
   become: true
+  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - core
 
-- name: Install docker & utils
+- name: Install docker repository (Fedora)
+  command: dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo --overwrite
+  become: true
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - core
+
+- name: Add Docker GPG key (Ubuntu)
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Add Docker repository (Ubuntu)
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Update apt cache after adding Docker repo (Ubuntu)
+  apt:
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Install docker & utils (Fedora)
   dnf:
     name: ["docker-ce", "docker-ce-cli", "containerd.io","docker-buildx-plugin","docker-compose-plugin"]
   become: true
   when: ansible_facts.distribution == "Fedora" 
+  tags:
+    - install
+    - core
+
+- name: Install docker & utils (Ubuntu)
+  apt:
+    name: ["docker-ce", "docker-ce-cli", "containerd.io","docker-buildx-plugin","docker-compose-plugin"]
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - core
@@ -36,6 +84,26 @@
     append: yes
   become: yes
 
+- name: Install flatpak (Ubuntu)
+  apt:
+    name: flatpak
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Add flathub repository (Ubuntu)
+  flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
 - name: Install flatpak wares
   community.general.flatpak:
     name: ["md.obsidian.Obsidian","io.dbeaver.DBeaverCommunity"]
@@ -44,40 +112,110 @@
     - install
     - core
 
-- name: Enable Copr for lazygit
+- name: Enable Copr for lazygit (Fedora)
   become: true
   community.general.copr:
     name: atim/lazygit
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core 
+
 - name: Install lazygit on dnf-based systems (Fedora)
   dnf:
     name: ["lazygit"]
   become: true
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core 
-- name: Enable Copr for openvpn 
+
+- name: Install snapd (Ubuntu)
+  apt:
+    name: snapd
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Install lazygit via snap (Ubuntu)
+  snap:
+    name: lazygit-gm
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Enable Copr for openvpn (Fedora)
   become: true
   community.general.copr:
     name: dsommers/openvpn3
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core
     - vpn
+
 - name: Install openvpn on dnf-based systems (Fedora)
   dnf:
     name: ["openvpn3-client"]
   become: true
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core 
     - vpn
-- name: Install motif 'wares 
+
+#//- name: Add OpenVPN 3 repository (Ubuntu)
+#//  apt_repository:
+#//    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/openvpn-repo-pkg-key.gpg] https://packages.openvpn.net/openvpn3/debian {{ ansible_distribution_release }} main"
+#//    state: present
+#//  become: true
+#//  when: ansible_facts.distribution == "Ubuntu"
+#//  tags:
+#//    - install
+#//    - core
+#//    - vpn
+#//
+#//- name: Add OpenVPN 3 GPG key (Ubuntu)
+#//  apt_key:
+#//    url: https://packages.openvpn.net/packages-repo-pkg-key.pub
+#//    keyring: /usr/share/keyrings/openvpn-repo-pkg-key.gpg
+#//    state: present
+#//  become: true
+#//  when: ansible_facts.distribution == "Ubuntu"
+#//  tags:
+#//    - install
+#//    - core
+#//    - vpn
+#//
+#//- name: Install openvpn3 on apt-based systems (Ubuntu)
+#//  apt:
+#//    name: ["openvpn3"]
+#//    update_cache: true
+#//  become: true
+#//  when: ansible_facts.distribution == "Ubuntu"
+#//  tags:
+#//    - install
+#//    - core
+#    - vpn
+
+- name: Install motif wares (Fedora)
   dnf:
     name: ["psql","chromium"]
   become: true
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core 
+
+- name: Install motif wares (Ubuntu)
+  apt:
+    name: ["postgresql-client","chromium-browser"]
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core

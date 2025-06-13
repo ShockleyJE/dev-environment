@@ -1,0 +1,152 @@
+- name: Install git on apt-based systems (Ubuntu)
+  apt:
+    name: git
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - git
+
+- name: Install git on dnf-based systems (Fedora)
+  dnf:
+    name: git
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - git
+
+- name: Configure git user name
+  git_config:
+    name: user.name
+    scope: global
+    value: "{{ username }}"
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+
+- name: Configure git user email
+  git_config:
+    name: user.email
+    scope: global
+    value: "{{ username }}@example.com"  # Replace with your actual email
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+
+- name: Set git to use SSH for GitHub
+  git_config:
+    name: url.git@github.com:.insteadOf
+    scope: global
+    value: https://github.com/
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+    - ssh
+
+- name: Set git to use SSH for GitLab
+  git_config:
+    name: url.git@gitlab.com:.insteadOf
+    scope: global
+    value: https://gitlab.com/
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+    - ssh
+
+- name: Configure git to use the personal SSH key
+  git_config:
+    name: core.sshCommand
+    scope: global
+    value: "ssh -i {{ dest_key }} -o IdentitiesOnly=yes"
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+    - ssh
+
+- name: Set git default branch to main
+  git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+
+- name: Configure git to rebase on pull
+  git_config:
+    name: pull.rebase
+    scope: global
+    value: "true"
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+
+- name: Add GitHub to known hosts
+  known_hosts:
+    name: github.com
+    key: "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+    state: present
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - ssh
+    - config
+
+- name: Add GitLab to known hosts
+  known_hosts:
+    name: gitlab.com
+    key: "gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf"
+    state: present
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - ssh
+    - config
+
+- name: Test SSH connection to GitHub (non-blocking)
+  shell: ssh -T git@github.com -o ConnectTimeout=10 -o StrictHostKeyChecking=no
+  become_user: "{{ username }}"
+  register: github_ssh_test
+  failed_when: false
+  changed_when: false
+  tags:
+    - git
+    - ssh
+    - test
+
+- name: Test SSH connection to GitLab (non-blocking)
+  shell: ssh -T git@gitlab.com -o ConnectTimeout=10 -o StrictHostKeyChecking=no
+  become_user: "{{ username }}"
+  register: gitlab_ssh_test
+  failed_when: false
+  changed_when: false
+  tags:
+    - git
+    - ssh
+    - test
+
+- name: Display GitHub SSH test result
+  debug:
+    msg: "GitHub SSH test: {{ github_ssh_test.stderr if github_ssh_test.stderr else 'Connection test completed' }}"
+  tags:
+    - git
+    - ssh
+    - test
+
+- name: Display GitLab SSH test result
+  debug:
+    msg: "GitLab SSH test: {{ gitlab_ssh_test.stderr if gitlab_ssh_test.stderr else 'Connection test completed' }}"
+  tags:
+    - git
+    - ssh
+    - test

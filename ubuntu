@@ -22,4 +22,4 @@ run_with_sudo apt install software-properties-common
 run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible
 run_with_sudo apt install ansible
 
-ansible-playbook local.yml
+ansible-playbook local.yml -vvv --become-password-file="key/ansible" --vault-password-file="key/ansible"

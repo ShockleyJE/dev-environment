@@ -17,6 +17,5 @@
       tags:
         - install
         - core
-
   tasks:
-    - include_tasks: tasks/git-setup.yml
+  - include_tasks: tasks/git-setup.yml

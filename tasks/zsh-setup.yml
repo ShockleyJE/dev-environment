@@ -1,6 +1,7 @@
 - name: Install ZSH on apt-based systems
   apt:
     name: zsh
+  become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
@@ -19,7 +20,7 @@
     - dotfiles
     - zsh
 
-- name: Install additional wares 
+- name: Install additional wares (Fedora)
   dnf:
     name: which
   become: true
@@ -30,8 +31,19 @@
     - dotfiles
     - zsh
 
+- name: Install additional wares (Ubuntu)
+  apt:
+    name: ["which", "curl"]
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - productivity
+    - dotfiles
+    - zsh
+
 - name: Change shell to zsh
-  shell: chsh -s $(which zsh) $username
+  shell: chsh -s $(which zsh) {{ username }}
   become: true
   tags:
     - install
@@ -39,9 +51,9 @@
     - dotfiles
     - zsh
 
-- name: Check that the somefile.conf exists
+- name: Check that oh-my-zsh exists
   stat:
-    path: /home/james/.oh-my-zsh
+    path: /home/{{ username }}/.oh-my-zsh
   register: oh_my_stats
   tags:
     - install
@@ -50,17 +62,19 @@
     - zsh
 
 - name: Oh-My-Zsh
-  shell: curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh > ~/.oh-my-installer && chmod +x ~/.oh-my-installer && ~/.oh-my-installer
+  shell: curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh > ~/.oh-my-installer && chmod +x ~/.oh-my-installer && ~/.oh-my-installer --unattended
   tags:
     - install
     - productivity
     - dotfiles
     - zsh
   when: oh_my_stats.stat.exists == False
-  become_user: $username
+  become_user: "{{ username }}"
 
 - name: Delete default .zshrc 
-  shell: rm ~/.zshrc 
+  file:
+    path: /home/{{ username }}/.zshrc
+    state: absent
   tags:
     - install
     - productivity
@@ -71,7 +85,8 @@
 - name: Install zsh-autosuggestions
   ansible.builtin.git:
     repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
-    dest: "~/.oh-my-zsh/plugins/zsh-autosuggestions"
+    dest: "/home/{{ username }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+  become_user: "{{ username }}"
   tags:
     - install
     - productivity
