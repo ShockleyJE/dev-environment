@@ -6,3 +6,22 @@
   tags:
     - vpn
     - install
+
+- name: Install OpenVPN
+  become: true
+  apt:
+    name: openvpn
+    state: present
+    update_cache: yes
+  tags:
+    - vpn
+    - install
+
+- name: Ensure OpenVPN service is enabled and started
+  become: true
+  systemd:
+    name: openvpn
+    enabled: yes
+    state: started
+  tags:
+    - vpn
