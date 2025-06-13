@@ -10,25 +10,25 @@
 #    dest: "{{ dest_key }}"
 #    mode: 0600
 #    owner: "{{ username }}"
-#- name: Ensure .openvpn directory exists.
-#  file:
-#    dest: "~/.openvpn"
-#    mode: 0700
-#    state: directory
-#  tags:
-#    - vpn 
-#    - install
-#- name: Install openvpn config 
-#  copy:
-#    src: "./motif/james_desktop.ovpn"
-#    dest: "~/.openvpn/james_desktop.ovpn"
-#    mode: 0600
-#  tags:
-#    - vpn
-#    - install
-#- name: Activate openvpn config
-#  become_user: "{{ username }}"
-#  shell: zsh -c "openvpn3 config-import --config ~/.openvpn/james_desktop.ovpn"
-#  tags:
-#    - install
-#    - core
+- name: Ensure .openvpn directory exists.
+  file:
+    dest: "~/.openvpn"
+    mode: 0700
+    state: directory
+  tags:
+    - vpn 
+    - install
+- name: Install openvpn config 
+  copy:
+    src: "./motif/james_desktop.ovpn"
+    dest: "~/.openvpn/james_desktop.ovpn"
+    mode: 0600
+  tags:
+    - vpn
+    - install
+- name: Activate openvpn config
+  become_user: "{{ username }}"
+  shell: zsh -c "openvpn3 config-import --config ~/.openvpn/james_desktop.ovpn"
+  tags:
+    - install
+    - core
