@@ -202,7 +202,7 @@
 #//    - core
 #    - vpn
 
-- name: Install motif wares (Fedora)
+- name: Install motif wares from dnf (Fedora)
   dnf:
     name: ["psql","chromium"]
   become: true
@@ -211,9 +211,18 @@
     - install
     - core 
 
-- name: Install motif wares (Ubuntu)
+- name: Install motif wares from apt (Ubuntu)
   apt:
     name: ["postgresql-client","chromium-browser"]
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Install motif wares from snap (Ubuntu)
+  snap:
+    name: slack
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
