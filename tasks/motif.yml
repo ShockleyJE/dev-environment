@@ -7,24 +7,24 @@
     - vpn
     - install
 
-- name: Install OpenVPN
-  become: true
-  apt:
-    name: openvpn
-    state: present
-    update_cache: yes
-  tags:
-    - vpn
-    - install
+# - name: Install OpenVPN
+#   become: true
+#   apt:
+#     name: openvpn
+#     state: present
+#     update_cache: yes
+#   tags:
+#     - vpn
+#     - install
 
-- name: Ensure OpenVPN service is enabled and started
-  become: true
-  systemd:
-    name: openvpn
-    enabled: yes
-    state: started
-  tags:
-    - vpn
+# - name: Ensure OpenVPN service is enabled and started
+#   become: true
+#   systemd:
+#     name: openvpn
+#     enabled: yes
+#     state: started
+#   tags:
+#     - vpn
 
 - name: Install Zoom (Ubuntu)
   become: true
@@ -36,3 +36,36 @@
   tags:
     - install
     - zoom
+
+# https://community.openvpn.net/Pages/OpenVPN3Linux#stable-repository-debian-ubuntu
+- name: Download OpenVPN 3 GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://packages.openvpn.net/packages-repo.gpg | gpg --dearmor -o /usr/share/keyrings/openvpn-repo.gpg
+  args:
+    creates: /usr/share/keyrings/openvpn-repo.gpg
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - vpn
+    - install
+
+- name: Add OpenVPN 3 repository (Ubuntu)
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/openvpn-repo.gpg] https://packages.openvpn.net/openvpn3/debian {{ ansible_distribution_release }} main"
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - vpn
+    - install
+
+- name: Install OpenVPN 3 (Ubuntu)
+  become: true
+  apt:
+    name: openvpn3
+    state: present
+    update_cache: yes
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - vpn
+    - install
