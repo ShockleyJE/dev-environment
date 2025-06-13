@@ -18,8 +18,9 @@ run_with_sudo() {
     fi
 }
 
-run_with_sudo apt install software-properties-common
-run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible
-run_with_sudo apt install ansible
+run_with_sudo apt install software-properties-common > /dev/null 2>&1
+run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible > /dev/null 2>&1
+run_with_sudo apt install ansible > /dev/null 2>&1
 
-ansible-playbook local.yml -vvv --become-password-file="key/ansible" --vault-password-file="key/ansible"
+# -vvv flag is a good verbosity level to start with for troubleshooting
+ansible-playbook local.yml --become-password-file="key/ansible" --vault-password-file="key/ansible"

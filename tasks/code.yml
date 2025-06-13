@@ -1,0 +1,151 @@
+- name: Remove existing VS Code repository files (Ubuntu)
+  file:
+    path: "{{ item }}"
+    state: absent
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  with_items:
+    - /etc/apt/sources.list.d/vscode.list
+    - /etc/apt/sources.list.d/microsoft.list
+    - /etc/apt/sources.list.d/code.list
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Remove old Microsoft GPG keys (Ubuntu)
+  file:
+    path: "{{ item }}"
+    state: absent
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  with_items:
+    - /etc/apt/trusted.gpg.d/microsoft.gpg
+    - /usr/share/keyrings/microsoft.gpg
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Clean apt cache to remove conflicting entries (Ubuntu)
+  shell: apt-get clean && rm -rf /var/lib/apt/lists/*
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Create keyrings directory (Ubuntu)
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Download and add Microsoft GPG key (Ubuntu)
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /tmp/microsoft.asc
+    mode: '0644'
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Convert and install Microsoft GPG key (Ubuntu)
+  shell: gpg --dearmor < /tmp/microsoft.asc > /usr/share/keyrings/microsoft.gpg
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Set permissions on Microsoft GPG key (Ubuntu)
+  file:
+    path: /usr/share/keyrings/microsoft.gpg
+    mode: '0644'
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Add Visual Studio Code repository (Ubuntu)
+  apt_repository:
+    repo: "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
+    state: present
+    filename: vscode
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Update apt cache after adding VS Code repo (Ubuntu)
+  apt:
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Install Visual Studio Code (Ubuntu)
+  apt:
+    name: code
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Clean up temporary GPG key file (Ubuntu)
+  file:
+    path: /tmp/microsoft.asc
+    state: absent
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Add Microsoft repository (Fedora)
+  yum_repository:
+    name: vscode
+    description: Visual Studio Code
+    baseurl: https://packages.microsoft.com/yumrepos/vscode
+    gpgcheck: true
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+    enabled: true
+  become: true
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - code
+    - vscode
+
+- name: Install Visual Studio Code (Fedora)
+  dnf:
+    name: code
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - code
+    - vscode
