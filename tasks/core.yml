@@ -139,11 +139,25 @@
     - install
     - core
 
-- name: Install lazygit via snap (Ubuntu)
-  snap:
-    name: lazygit-gm
-  become: true
+- name: Check if lazygit is already installed (Ubuntu)
+  command: which lazygit
+  register: lazygit_installed
+  failed_when: false
+  changed_when: false
   when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Install lazygit from GitHub releases (Ubuntu)
+  shell: |
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | \grep -Po '"tag_name": *"v\K[^"]*')
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+    sudo install lazygit -D -t /usr/local/bin/
+    rm -f lazygit lazygit.tar.gz
+  become: true
+  when: ansible_facts.distribution == "Ubuntu" and lazygit_installed.rc != 0
   tags:
     - install
     - core
