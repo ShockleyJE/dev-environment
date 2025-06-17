@@ -9,7 +9,7 @@
 
 - name: Install core utils on apt-based systems (Ubuntu)
   apt:
-    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential"]
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2"]
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
@@ -181,6 +181,35 @@
     - install
     - core 
     - vpn
+
+- name: Add fs.inotify.max_user_instances to sysctl.conf
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^fs\.inotify\.max_user_instances='
+    line: 'fs.inotify.max_user_instances=8192'
+    state: present
+  become: true
+  tags:
+    - install
+    - core
+
+- name: Add fs.inotify.max_user_watches to sysctl.conf
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^fs\.inotify\.max_user_watches='
+    line: 'fs.inotify.max_user_watches=524288'
+    state: present
+  become: true
+  tags:
+    - install
+    - core
+
+- name: Reload sysctl to apply inotify changes
+  command: sysctl -p
+  become: true
+  tags:
+    - install
+    - core
 
 #//- name: Add OpenVPN 3 repository (Ubuntu)
 #//  apt_repository:
