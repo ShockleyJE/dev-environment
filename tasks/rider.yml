@@ -1,0 +1,13 @@
+---
+- name: Install JetBrains Rider via snap (Ubuntu)
+  snap:
+    name: rider
+    classic: true
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - development
+    - rider
+    - jetbrains
