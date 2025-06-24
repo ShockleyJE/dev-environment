@@ -27,3 +27,4 @@
     - include_tasks: tasks/mise.yml
     - include_tasks: tasks/code.yml
     - include_tasks: tasks/git-setup.yml
+    - include_tasks: tasks/personal.yml
