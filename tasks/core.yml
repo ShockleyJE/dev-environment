@@ -9,7 +9,7 @@
 
 - name: Install core utils on apt-based systems (Ubuntu)
   apt:
-    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2"]
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg"]
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
@@ -271,3 +271,42 @@
   tags:
     - install
     - core
+
+- name: Create /nix directory for Nix installation (Ubuntu)
+  file:
+    path: /nix
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+    - nix
+
+- name: Download and install Nix (Ubuntu)
+  shell: |
+    curl -L https://nixos.org/nix/install | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.nix-profile"
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+    - nix
+
+- name: Source Nix profile in zsh configuration (Ubuntu)
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'source $HOME/.nix-profile/etc/profile.d/nix.sh'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+    - nix

@@ -1,0 +1,191 @@
+- name: Install llama.cpp using Nix
+  shell: |
+    nix-env -iA nixpkgs.llama-cpp
+  args:
+    creates: "{{ ansible_env.HOME }}/.nix-profile/bin/llama"
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Create llama directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  with_items:
+    - "{{ ansible_env.HOME }}/llama"
+    - "{{ ansible_env.HOME }}/llama/models"
+    - "{{ ansible_env.HOME }}/llama/config"
+    - "{{ ansible_env.HOME }}/llama/scripts"
+    - "{{ ansible_env.HOME }}/llama/cache"
+  tags:
+    - install
+    - llama
+
+- name: Add llama alias to zsh configuration
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'alias lla="llama"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Add LLAMA_MODELS environment variable to zsh configuration
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export LLAMA_MODELS="{{ ansible_env.HOME }}/llama/models"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Add LLAMA_CONFIG environment variable to zsh configuration
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export LLAMA_CONFIG="{{ ansible_env.HOME }}/llama/config"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Create README for llama directory
+  copy:
+    dest: "{{ ansible_env.HOME }}/llama/README.md"
+    content: |
+      # Llama.cpp Directory Structure
+      
+      This directory contains all llama.cpp related files and configurations.
+      
+      ## Directory Structure
+      
+      - `models/` - Store your GGUF model files here
+      - `config/` - Configuration files, grammars, and settings
+      - `scripts/` - Custom scripts and utilities
+      - `cache/` - Temporary files and downloads
+      
+      ## Usage
+      
+      Use the `lla` alias to run llama.cpp commands:
+      ```bash
+      lla -m models/your-model.gguf -p "Your prompt here"
+      ```
+      
+      ## Environment Variables
+      
+      - `LLAMA_MODELS`: Points to the models directory
+      - `LLAMA_CONFIG`: Points to the config directory
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Install llama.cpp using Nix (Fedora)
+  shell: |
+    nix-env -iA nixpkgs.llama-cpp
+  args:
+    creates: "{{ ansible_env.HOME }}/.nix-profile/bin/llama"
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - llama
+
+- name: Create llama directory structure (Fedora)
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  with_items:
+    - "{{ ansible_env.HOME }}/llama"
+    - "{{ ansible_env.HOME }}/llama/models"
+    - "{{ ansible_env.HOME }}/llama/config"
+    - "{{ ansible_env.HOME }}/llama/scripts"
+    - "{{ ansible_env.HOME }}/llama/cache"
+  tags:
+    - install
+    - llama
+
+- name: Add llama alias to zsh configuration (Fedora)
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'alias lla="llama"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - llama
+
+- name: Add LLAMA_MODELS environment variable to zsh configuration (Fedora)
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export LLAMA_MODELS="{{ ansible_env.HOME }}/llama/models"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - llama
+
+- name: Add LLAMA_CONFIG environment variable to zsh configuration (Fedora)
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'export LLAMA_CONFIG="{{ ansible_env.HOME }}/llama/config"'
+    state: present
+    create: yes
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - llama
+
+- name: Create README for llama directory (Fedora)
+  copy:
+    dest: "{{ ansible_env.HOME }}/llama/README.md"
+    content: |
+      # Llama.cpp Directory Structure
+      
+      This directory contains all llama.cpp related files and configurations.
+      
+      ## Directory Structure
+      
+      - `models/` - Store your GGUF model files here
+      - `config/` - Configuration files, grammars, and settings
+      - `scripts/` - Custom scripts and utilities
+      - `cache/` - Temporary files and downloads
+      
+      ## Usage
+      
+      Use the `lla` alias to run llama.cpp commands:
+      ```bash
+      lla -m models/your-model.gguf -p "Your prompt here"
+      ```
+      
+      ## Environment Variables
+      
+      - `LLAMA_MODELS`: Points to the models directory
+      - `LLAMA_CONFIG`: Points to the config directory
+  become: false
+  when: ansible_facts.distribution == "Fedora"
+  tags:
+    - install
+    - llama 

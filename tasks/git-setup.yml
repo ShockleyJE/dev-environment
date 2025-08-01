@@ -91,6 +91,16 @@
     - git
     - config
 
+- name: Configure git global excludes file
+  git_config:
+    name: core.excludesfile
+    scope: global
+    value: "~/.gitignore_global"
+  become_user: "{{ username }}"
+  tags:
+    - git
+    - config
+
 - name: Add GitHub to known hosts
   known_hosts:
     name: github.com
