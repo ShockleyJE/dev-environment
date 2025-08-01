@@ -1,0 +1,83 @@
+- name: Add NVIDIA CUDA repository key
+  apt_key:
+    url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Add NVIDIA CUDA repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+    state: present
+    filename: cuda
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Install CUDA toolkit
+  apt:
+    name: cuda-toolkit-12-8
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Create CUDA environment variables file
+  copy:
+    dest: "{{ ansible_env.HOME }}/.cuda-env"
+    content: |
+      # CUDA Environment Variables
+      export CUDA_HOME=/usr/local/cuda-12.8
+      export PATH=$PATH:/usr/local/cuda-12.8/bin
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12.8/lib64
+    mode: '0644'
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Source CUDA environment in zsh configuration
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: 'source ~/.cuda-env'
+    state: present
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Verify CUDA installation
+  command: nvcc --version
+  register: cuda_version
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+  ignore_errors: true
+
+- name: Display CUDA installation status
+  debug:
+    msg: "CUDA installation {{ 'completed successfully' if cuda_version.rc == 0 else 'failed or not detected' }}"
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda 

@@ -5,9 +5,25 @@
     - install
     - llama
 
-- name: Install llama.cpp using Nix
+- name: Create custom llama.cpp with CUDA support
   shell: |
-    nix-env -iA nixpkgs.llama-cpp
+    cat > ~/llama-cpp-cuda.nix << 'EOF'
+    { pkgs ? import <nixpkgs> {} }:
+    
+    pkgs.llama-cpp.override {
+      enableCuda = true;
+      cudaSupport = true;
+    }
+    EOF
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Install llama.cpp with CUDA support using Nix
+  shell: |
+    nix-env -if ~/llama-cpp-cuda.nix
   args:
     creates: "{{ ansible_env.HOME }}/.nix-profile/bin/llama"
   become: false
@@ -95,6 +111,33 @@
       
       - `LLAMA_MODELS`: Points to the models directory
       - `LLAMA_CONFIG`: Points to the config directory
+      
+      ## GPU Support
+      
+      This installation includes CUDA support for NVIDIA GPUs.
+      Use the `--gpu-layers` parameter to enable GPU acceleration:
+      ```bash
+      lla -m models/your-model.gguf -p "Your prompt here" --gpu-layers 35
+      ```
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Verify llama.cpp GPU support
+  shell: |
+    llama --help | grep -i gpu || echo "GPU support not detected"
+  register: llama_gpu_check
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - llama
+
+- name: Display GPU support status
+  debug:
+    msg: "{{ llama_gpu_check.stdout }}"
   become: false
   when: ansible_facts.distribution == "Ubuntu"
   tags:
