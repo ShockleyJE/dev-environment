@@ -81,3 +81,24 @@
   tags:
     - install
     - prj
+
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj/openfga-backup"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning openfga-backup
+  git:
+    repo: 'git@gitlab.com:ambr1/platform-utilities/openfga-backup.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/openfga-backup"
+    version: main 
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
