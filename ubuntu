@@ -1,26 +1,13 @@
 #!/usr/bin/env bash
 
-# Function to check if we need to use sudo
-needs_sudo() {
-    if [ "$EUID" -ne 0 ]; then
-        return 0  # Need sudo
-    else
-        return 1  # Don't need sudo
-    fi
-}
+# Check if Ansible is installed, install if not
+if ! command -v ansible-playbook &> /dev/null; then
+    echo "Installing Ansible..."
+    sudo apt update
+    sudo apt install -y software-properties-common
+    sudo apt-add-repository --yes --update ppa:ansible/ansible
+    sudo apt install -y ansible
+fi
 
-# Function to run a command with sudo if needed
-run_with_sudo() {
-    if needs_sudo; then
-        sudo "$@"
-    else
-        "$@"
-    fi
-}
-
-run_with_sudo apt install software-properties-common > /dev/null 2>&1
-run_with_sudo apt-add-repository --yes --update ppa:ansible/ansible > /dev/null 2>&1
-run_with_sudo apt install ansible > /dev/null 2>&1
-
-# -vvv flag is a good verbosity level to start with for troubleshooting
-ansible-playbook local.yml --become-password-file="key/ansible" --vault-password-file="key/ansible"
+# Run the playbook with password prompts
+ansible-playbook local.yml --ask-become-pass --vault-password-file="key/ansible" "$@"
