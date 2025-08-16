@@ -1,0 +1,93 @@
+- name: Ensure util directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/util"
+    state: directory
+    mode: '0755'
+  become: false
+  tags:
+    - install
+    - util
+
+- name: Check if ComfyUI-VideoHelperSuite exists
+  stat:
+    path: "{{ ansible_env.HOME }}/util/ComfyUI-VideoHelperSuite"
+  register: video_helper_stat
+  tags:
+    - install
+    - util
+
+- name: Cloning ComfyUI-VideoHelperSuite (essential for video workflows)
+  git:
+    repo: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git'
+    dest: "{{ ansible_env.HOME }}/util/ComfyUI-VideoHelperSuite"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: video_helper_stat.stat.exists == False
+  tags:
+    - install
+    - util
+
+- name: Check if ComfyUI-AnimateDiff-Evolved exists
+  stat:
+    path: "{{ ansible_env.HOME }}/util/ComfyUI-AnimateDiff-Evolved"
+  register: animate_diff_stat
+  tags:
+    - install
+    - util
+
+- name: Cloning ComfyUI-AnimateDiff-Evolved (for video generation)
+  git:
+    repo: 'https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git'
+    dest: "{{ ansible_env.HOME }}/util/ComfyUI-AnimateDiff-Evolved"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: animate_diff_stat.stat.exists == False
+  tags:
+    - install
+    - util
+
+- name: Check if ComfyUI-Advanced-ControlNet exists
+  stat:
+    path: "{{ ansible_env.HOME }}/util/ComfyUI-Advanced-ControlNet"
+  register: advanced_controlnet_stat
+  tags:
+    - install
+    - util
+
+- name: Cloning ComfyUI-Advanced-ControlNet (often needed for video control)
+  git:
+    repo: 'https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git'
+    dest: "{{ ansible_env.HOME }}/util/ComfyUI-Advanced-ControlNet"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: advanced_controlnet_stat.stat.exists == False
+  tags:
+    - install
+    - util
+
+- name: Check if Wan2.1 exists
+  stat:
+    path: "{{ ansible_env.HOME }}/util/Wan2.1"
+  register: wan21_stat
+  tags:
+    - install
+    - util
+
+- name: Cloning Wan2.1 (video processing utility)
+  git:
+    repo: 'https://github.com/Wan-Video/Wan2.1.git'
+    dest: "{{ ansible_env.HOME }}/util/Wan2.1"
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: wan21_stat.stat.exists == False
+  tags:
+    - install
+    - util
