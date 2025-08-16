@@ -1,0 +1,53 @@
+- name: Create models directory structure
+  file:
+    path: "{{ ansible_env.HOME }}/models/{{ item }}"
+    state: directory
+    mode: '0755'
+  become: false
+  with_items:
+    - checkpoints
+    - vae
+    - loras
+    - controlnet
+    - clip
+    - clip_vision
+    - configs
+    - diffusion_models
+    - unet
+    - embeddings
+    - upscale_models
+  tags:
+    - install
+    - models
+
+- name: Create models directory README
+  copy:
+    dest: "{{ ansible_env.HOME }}/models/README.md"
+    content: |
+      # AI Models Directory Structure
+
+      This directory contains various AI models organized by type:
+
+      ## Directory Structure
+
+      - **checkpoints/**: Stable Diffusion models (.safetensors, .ckpt)
+      - **vae/**: VAE models for encoding/decoding
+      - **loras/**: LoRA adaptation models
+      - **controlnet/**: ControlNet models for guided generation
+      - **clip/**: CLIP text encoder models
+      - **clip_vision/**: CLIP vision models
+      - **configs/**: Model configuration files
+      - **diffusion_models/**: Diffusion model files
+      - **unet/**: U-Net model files
+      - **embeddings/**: Text embeddings and textual inversions
+      - **upscale_models/**: Upscaling models (ESRGAN, RealESRGAN, etc.)
+
+      ## Usage
+
+      Place your AI models in the appropriate subdirectories based on their type.
+      This structure is compatible with most AI inference tools and frameworks.
+    mode: '0644'
+  become: false
+  tags:
+    - install
+    - models
