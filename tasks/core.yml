@@ -1,15 +1,15 @@
 - name: Install core utils on dnf-based systems (Fedora)
   dnf:
-    name: ["fzf","vim-enhanced","alacritty", "steam","dnf-plugins-core","neovim","lua","lua-devel"]
+    name: ["fzf","vim-enhanced","alacritty", "steam","dnf-plugins-core","neovim","lua","lua-devel","tmux"]
   become: true
-  when: ansible_facts.distribution == "Fedora" 
+  when: ansible_facts.distribution == "Fedora"
   tags:
     - install
     - core
 
 - name: Install core utils on apt-based systems (Ubuntu)
   apt:
-    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg", "pushd"]
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg","tmux"]
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
