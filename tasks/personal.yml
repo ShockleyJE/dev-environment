@@ -51,3 +51,69 @@
     - install
     - gaming
     - steam
+
+- name: Download and install Signal's official GPG key
+  get_url:
+    url: https://updates.signal.org/desktop/apt/keys.asc
+    dest: /tmp/signal-key.asc
+    mode: '0644'
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
+
+- name: Convert GPG key to keyring format
+  shell: |
+    gpg --dearmor < /tmp/signal-key.asc > /usr/share/keyrings/signal-desktop-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/signal-desktop-keyring.gpg
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
+
+- name: Download Signal repository sources file
+  get_url:
+    url: https://updates.signal.org/static/desktop/apt/signal-desktop.sources
+    dest: /etc/apt/sources.list.d/signal-desktop.sources
+    mode: '0644'
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
+
+- name: Update package database
+  apt:
+    update_cache: yes
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
+
+- name: Install Signal Desktop
+  apt:
+    name: signal-desktop
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
+
+- name: Clean up Signal GPG key file
+  file:
+    path: /tmp/signal-key.asc
+    state: absent
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - communication
+    - signal
