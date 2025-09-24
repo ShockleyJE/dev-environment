@@ -27,7 +27,47 @@
     - controllers
     - xpadneo
 
-- name: Ensure xpadneo DKMS is installed (Ubuntu)
+- name: Ensure Bluetooth stack present (Ubuntu)
+  apt:
+    name:
+      - bluetooth
+      - bluez
+      - bluez-tools
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Clone xpadneo source (Ubuntu)
+  ansible.builtin.git:
+    repo: https://github.com/atar-axis/xpadneo.git
+    dest: /usr/src/xpadneo
+    version: master
+    update: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Install xpadneo via DKMS (Ubuntu)
+  ansible.builtin.shell: |
+    bash -lc 'set -euo pipefail; make install'
+  args:
+    chdir: /usr/src/xpadneo
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Load xpadneo kernel module (Ubuntu)
   community.general.modprobe:
     name: hid_xpadneo
     state: present
