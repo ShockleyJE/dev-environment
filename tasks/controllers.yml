@@ -1,0 +1,63 @@
+- name: Install controller utilities (Ubuntu)
+  apt:
+    name:
+      - evtest
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+
+- name: Install xpadneo (Xbox Wireless Controller over Bluetooth) on Ubuntu
+  apt:
+    name:
+      - dkms
+      - linux-headers-generic
+      - bluetooth
+      - bluez
+      - bluez-tools
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Ensure xpadneo DKMS is installed (Ubuntu)
+  community.general.modprobe:
+    name: hid_xpadneo
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Install xpad (USB Xbox controller driver) on Ubuntu
+  apt:
+    name:
+      - linux-modules-extra-{{ ansible_kernel }}
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpad
+
+- name: Load xpad kernel module (Ubuntu)
+  community.general.modprobe:
+    name: xpad
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpad
