@@ -44,6 +44,7 @@
     - include_tasks: tasks/personal.yml
     - include_tasks: tasks/cuda.yml
     - include_tasks: tasks/models.yml
+    - include_tasks: tasks/redis.yml
     - include_tasks: tasks/utility-repos.yml
     - include_tasks: tasks/llama.yml
     - include_tasks: tasks/rider.yml

@@ -55,11 +55,44 @@
     - controllers
     - xpadneo
 
+- name: Check if xpadneo DKMS module exists (Ubuntu)
+  ansible.builtin.shell: |
+    dkms status hid-xpadneo
+  register: dkms_status
+  failed_when: false
+  changed_when: false
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
 - name: Install xpadneo via DKMS (Ubuntu)
   ansible.builtin.shell: |
     bash -lc 'set -euo pipefail; make install'
   args:
     chdir: /usr/src/xpadneo
+  become: true
+  when: ansible_facts.distribution == "Ubuntu" and dkms_status.rc != 0
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Build DKMS module for current kernel (Ubuntu)
+  ansible.builtin.shell: |
+    dkms build -m hid-xpadneo -v v0.9-226-ga16acb0 -k {{ ansible_kernel }}
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Install DKMS module for current kernel (Ubuntu)
+  ansible.builtin.shell: |
+    dkms install -m hid-xpadneo -v v0.9-226-ga16acb0 -k {{ ansible_kernel }}
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:

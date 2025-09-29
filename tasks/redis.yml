@@ -1,0 +1,46 @@
+- name: Install dependencies for Redis repository
+  apt:
+    name:
+      - curl
+      - lsb-release
+      - gnupg
+    state: present
+    update_cache: false
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - redis
+
+- name: Add Redis APT repository key
+  apt_key:
+    url: https://packages.redis.io/gpg
+    keyring: /usr/share/keyrings/redis-archive-keyring.gpg
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - redis
+
+- name: Add Redis APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb {{ ansible_distribution_release | lower }} main"
+    filename: redis
+    state: present
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - redis
+
+- name: Install redis-cli
+  apt:
+    name: redis-tools
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - redis
