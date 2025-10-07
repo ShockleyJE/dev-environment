@@ -9,7 +9,7 @@
 
 - name: Install core utils on apt-based systems (Ubuntu)
   apt:
-    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg","tmux"]
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg","tmux","bat"]
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:

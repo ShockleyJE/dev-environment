@@ -134,3 +134,42 @@
     - install
     - controllers
     - xpad
+
+- name: Ensure Xbox Elite udev permissions rule present (Ubuntu)
+  ansible.builtin.copy:
+    dest: /etc/udev/rules.d/99-xbox-elite2.rules
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      SUBSYSTEM=="hidraw", KERNELS=="0005:045E:02FD.*", MODE="0666", TAG+="uaccess"
+      SUBSYSTEM=="hidraw", KERNELS=="0005:045E:0B22.*", MODE="0666", TAG+="uaccess"
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  register: xbox_udev_rule
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Reload udev rules if Xbox Elite rule updated (Ubuntu)
+  ansible.builtin.command: udevadm control --reload
+  become: true
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - xbox_udev_rule is changed
+  tags:
+    - install
+    - controllers
+    - xpadneo
+
+- name: Trigger udev for hidraw devices if Xbox Elite rule updated (Ubuntu)
+  ansible.builtin.command: udevadm trigger --subsystem-match=hidraw
+  become: true
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - xbox_udev_rule is changed
+  tags:
+    - install
+    - controllers
+    - xpadneo
