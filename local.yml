@@ -42,6 +42,11 @@
     - include_tasks: tasks/code.yml
     - include_tasks: tasks/git-setup.yml
     - include_tasks: tasks/personal.yml
+      tags:
+        - personal
+        - signal
+        - communication
+        - install
     - include_tasks: tasks/cuda.yml
     - include_tasks: tasks/models.yml
     - include_tasks: tasks/redis.yml
