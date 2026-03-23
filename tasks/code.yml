@@ -105,7 +105,7 @@
 - name: Install Visual Studio Code (Ubuntu)
   apt:
     name: code
-    state: present
+    state: latest
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:

@@ -40,6 +40,10 @@
     - include_tasks: tasks/projects.yml
     - include_tasks: tasks/mise.yml
     - include_tasks: tasks/code.yml
+      tags:
+        - install
+        - code
+        - vscode
     - include_tasks: tasks/git-setup.yml
     - include_tasks: tasks/personal.yml
       tags:
