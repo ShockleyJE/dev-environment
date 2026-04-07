@@ -9,7 +9,7 @@
 
 - name: Install core utils on apt-based systems (Ubuntu)
   apt:
-    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg","tmux","bat","wl-clipboard","keyd"]
+    name: ["fzf","vim","alacritty","neovim","lua5.3","liblua5.3-dev","curl","wget","git","build-essential","libfuse2","ffmpeg","tmux","bat","wl-clipboard"]
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   tags:
@@ -108,6 +108,41 @@
   community.general.flatpak:
     name: ["md.obsidian.Obsidian","io.dbeaver.DBeaverCommunity"]
   become: true
+  tags:
+    - install
+    - core
+
+- name: Check if keyd is already installed (Ubuntu)
+  command: which keyd
+  register: keyd_installed
+  failed_when: false
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - core
+
+- name: Install keyd from source (Ubuntu)
+  shell: |
+    cd /tmp
+    git clone https://github.com/rvaiya/keyd.git
+    cd keyd
+    make
+    sudo make install
+    rm -rf /tmp/keyd
+  become: true
+  when: ansible_facts.distribution == "Ubuntu" and keyd_installed.rc != 0
+  tags:
+    - install
+    - core
+
+- name: Enable keyd service (Ubuntu)
+  systemd_service:
+    name: keyd
+    enabled: true
+    state: started
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - core
