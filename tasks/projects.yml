@@ -115,7 +115,28 @@
   git:
     repo: 'git@gitlab.com:shockleyje_motif/spark-sandbox.git'
     dest: "{{ lookup('env', 'HOME') }}/prj/spark-sandbox"
-    version: main 
+    version: main
+    recursive: yes
+    accept_hostkey: yes
+    update: yes
+  when: prj_stat.stat.exists == False
+  tags:
+    - install
+    - prj
+
+- name: Ensure prj directory exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/prj/monorepo"
+  register: prj_stat
+  tags:
+    - install
+    - prj
+
+- name: Cloning monorepo
+  git:
+    repo: 'git@gitlab.com:ambr1/internal/personal/monorepo.git'
+    dest: "{{ lookup('env', 'HOME') }}/prj/monorepo"
+    version: main
     recursive: yes
     accept_hostkey: yes
     update: yes

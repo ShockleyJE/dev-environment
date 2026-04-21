@@ -38,6 +38,9 @@
     - include_tasks: tasks/vpn.yml
     - include_tasks: tasks/motif.yml
     - include_tasks: tasks/projects.yml
+      tags:
+        - install
+        - prj
     - include_tasks: tasks/mise.yml
     - include_tasks: tasks/code.yml
       tags:
