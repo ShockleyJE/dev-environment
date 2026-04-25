@@ -62,6 +62,9 @@
       tags:
         - install
         - hermes
+    # signal-cli runs after hermes intentionally — both tasks warn-and-continue
+    # on missing config, and the signal-cli daemon resyncs Signal's server-side
+    # queue when it eventually comes up, so first-boot order is symmetric.
     - include_tasks: tasks/signal-cli.yml
       tags:
         - install
