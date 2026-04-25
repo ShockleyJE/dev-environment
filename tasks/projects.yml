@@ -69,11 +69,11 @@
     - install
     - prj
 
-- name: Cloning ambr data service
+- name: Cloning obsidian
   git:
     repo: 'git@github.com:ShockleyJE/obsidian.git'
     dest: "{{ lookup('env', 'HOME') }}/prj/obsidian"
-    version: master 
+    version: main
     recursive: yes
     accept_hostkey: yes
     update: yes

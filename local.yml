@@ -60,4 +60,3 @@
     - include_tasks: tasks/utility-repos.yml
     - include_tasks: tasks/llama.yml
     - include_tasks: tasks/rider.yml
-    - include_tasks: tasks/controllers.yml
