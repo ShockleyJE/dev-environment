@@ -1,5 +1,5 @@
 - name: Verify hermes CLI is on PATH (Ubuntu)
-  ansible.builtin.command: mise which hermes
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/mise which hermes"
   register: hermes_which
   failed_when: false
   changed_when: false
@@ -33,6 +33,10 @@
     - install
     - hermes
 
+# ~/.hermes/.env is a fragile marker (the .env name is generic and could
+# collide with unrelated tooling), but it's the file `hermes gateway setup`
+# writes when at least one platform token is configured. If upstream
+# changes the filename, update here and in the warning message below.
 - name: Stat gateway-config marker (Ubuntu)
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.hermes/.env"
@@ -85,7 +89,6 @@
     scope: user
     enabled: true
     state: started
-    daemon_reload: true
   when:
     - ansible_facts.distribution == "Ubuntu"
     - hermes_which.rc == 0
