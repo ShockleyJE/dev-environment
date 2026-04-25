@@ -1,0 +1,95 @@
+- name: Verify hermes CLI is on PATH (Ubuntu)
+  ansible.builtin.command: mise which hermes
+  register: hermes_which
+  failed_when: false
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - hermes
+
+- name: Warn if hermes is not installed (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      hermes is not on PATH. Ensure tasks/mise.yml ran and the
+      pipx:NousResearch/hermes-agent declaration in
+      ~/.dotfiles/mise/.config/mise/config.toml is correct.
+      Skipping the rest of tasks/hermes.yml.
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc != 0
+  tags:
+    - install
+    - hermes
+
+- name: Stat provider-config marker (Ubuntu)
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.hermes/auth.json"
+  register: hermes_provider_marker
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+  tags:
+    - install
+    - hermes
+
+- name: Stat gateway-config marker (Ubuntu)
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.hermes/.env"
+  register: hermes_gateway_marker
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+  tags:
+    - install
+    - hermes
+
+- name: Warn if hermes provider config is missing (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      Hermes provider config not found at ~/.hermes/auth.json.
+      Run this once interactively to populate provider API keys:
+
+          mise exec -- hermes setup
+
+      Then re-run: ansible-playbook local.yml --tags hermes
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+    - not hermes_provider_marker.stat.exists
+  tags:
+    - install
+    - hermes
+
+- name: Warn if hermes gateway config is missing (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      Hermes gateway config not found at ~/.hermes/.env.
+      The dotfiles-hermes-gateway.service will remain disabled until
+      messaging platform tokens are configured. Run once interactively:
+
+          mise exec -- hermes gateway setup
+
+      Then re-run: ansible-playbook local.yml --tags hermes
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+    - not hermes_gateway_marker.stat.exists
+  tags:
+    - install
+    - hermes
+
+- name: Enable and start hermes gateway service (Ubuntu)
+  ansible.builtin.systemd:
+    name: dotfiles-hermes-gateway.service
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+    - hermes_gateway_marker.stat.exists
+  tags:
+    - install
+    - hermes
