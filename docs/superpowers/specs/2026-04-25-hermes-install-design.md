@@ -121,30 +121,18 @@ STOW_FOLDERS="vim,zsh,htop,mise,aws,rider,civitai,comfyui,vibe-kanban,codex,vsco
 
 (Fedora and macOS scripts are not changed — Ubuntu-only scope.)
 
-### 4. Systemd unit (`.dotfiles`)
+### 4. Gateway service (hermes-managed)
 
-**File:** `/home/james/.dotfiles/systemd/units/dotfiles-hermes-gateway.service`
+Hermes manages its own systemd unit. The dev-environment ansible task runs
+`hermes gateway install` after gateway credentials are present; that command
+creates `~/.config/systemd/user/hermes-gateway.service` and enables it. The
+ansible task then ensures the service is started.
 
-```ini
-[Unit]
-Description=Hermes Agent Messaging Gateway
-Documentation=https://github.com/NousResearch/hermes-agent
-Wants=network-online.target
-After=network-online.target
-
-[Service]
-Type=simple
-WorkingDirectory=%h
-Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
-ExecStart=%h/.local/bin/mise exec -- hermes gateway start
-Restart=on-failure
-RestartSec=30s
-
-[Install]
-WantedBy=dotfiles.target
-```
-
-**`/home/james/.dotfiles/systemd/setup-all-services.sh`** — add a copy step for the new unit, mirroring the existing entries. The script copies the unit into `~/.config/systemd/user/` and runs `systemctl --user daemon-reload`. It does **not** `enable` the unit — enablement is gated by ansible on credential presence.
+No dotfiles-managed wrapper unit is needed; an earlier draft of this design
+authored one (`dotfiles-hermes-gateway.service`), but `hermes gateway start`
+delegates to `systemctl --user start hermes-gateway.service`, so the wrapper
+was both redundant and broken (it tried to start a service that hadn't been
+installed yet). Removed during Task 9 validation.
 
 ### 5. Ansible task (`dev-environment`)
 

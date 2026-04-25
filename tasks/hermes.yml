@@ -70,7 +70,7 @@
   ansible.builtin.debug:
     msg: |
       Hermes gateway config not found at ~/.hermes/.env.
-      The dotfiles-hermes-gateway.service will remain disabled until
+      The hermes-gateway.service will not be installed until
       messaging platform tokens are configured. Run once interactively:
 
           mise exec -- hermes gateway setup
@@ -84,9 +84,21 @@
     - install
     - hermes
 
-- name: Enable and start hermes gateway service (Ubuntu)
+- name: Install hermes-gateway systemd unit (Ubuntu)
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/mise exec -- hermes gateway install"
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.config/systemd/user/hermes-gateway.service"
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - hermes_which.rc == 0
+    - hermes_gateway_marker.stat.exists
+  tags:
+    - install
+    - hermes
+
+- name: Enable and start hermes-gateway service (Ubuntu)
   ansible.builtin.systemd:
-    name: dotfiles-hermes-gateway.service
+    name: hermes-gateway.service
     scope: user
     enabled: true
     state: started

@@ -270,6 +270,8 @@ git commit -m "feat(ubuntu): stow hermes package on bootstrap"
 
 ## Task 4: Author the systemd unit
 
+**Deviation note (executed 2026-04-25):** During Task 9 validation, the wrapper unit failed at runtime because `hermes gateway start` delegates to `systemctl --user start hermes-gateway.service` — an inner unit hermes manages itself. The wrapper was redundant. Tasks 4 and 6 were retroactively revised: the dotfiles unit was deleted, and the ansible task now runs `hermes gateway install` (creates the hermes-managed unit, idempotent via `creates:` guard) and then enables+starts `hermes-gateway.service` (no `dotfiles-` prefix).
+
 **Purpose:** Define the user-level systemd service that runs the Hermes messaging gateway.
 
 **Files:**
