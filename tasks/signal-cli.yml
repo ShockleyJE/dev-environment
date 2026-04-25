@@ -1,0 +1,74 @@
+- name: Verify signal-cli is on PATH (Ubuntu)
+  ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/mise which signal-cli"
+  register: signal_cli_which
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - signal-cli
+
+- name: Warn if signal-cli is not installed (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      signal-cli is not on PATH. Ensure tasks/mise.yml ran and the
+      github:AsamK/signal-cli declaration in
+      ~/.dotfiles/mise/.config/mise/config.toml is correct.
+      Skipping the rest of tasks/signal-cli.yml.
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - signal_cli_which.rc != 0
+  tags:
+    - install
+    - signal-cli
+
+# Linked-account marker: signal-cli writes a per-account directory at
+# ~/.local/share/signal-cli/data/<phone-number>.d/ after `signal-cli link`
+# completes. Detect ANY linked account by checking the parent data dir
+# is present and non-empty.
+- name: Detect linked signal-cli account (Ubuntu)
+  ansible.builtin.find:
+    paths: "{{ lookup('env', 'HOME') }}/.local/share/signal-cli/data"
+    file_type: directory
+    patterns: '*.d'
+  register: signal_cli_accounts
+  failed_when: false
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - signal_cli_which.rc == 0
+  tags:
+    - install
+    - signal-cli
+
+- name: Warn if no signal-cli account is linked (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      No linked signal-cli account found. The daemon will not start until
+      this host is linked to a Signal account. Run once interactively
+      (this scans a QR code with your phone):
+
+          signal-cli link -n "HermesAgent"
+
+      Then re-run: ansible-playbook local.yml --tags signal-cli
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - signal_cli_which.rc == 0
+    - signal_cli_accounts.matched | default(0) == 0
+  tags:
+    - install
+    - signal-cli
+
+- name: Enable and start signal-cli daemon service (Ubuntu)
+  ansible.builtin.systemd:
+    name: dotfiles-signal-cli.service
+    scope: user
+    enabled: true
+    state: started
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - signal_cli_which.rc == 0
+    - signal_cli_accounts.matched | default(0) > 0
+  tags:
+    - install
+    - signal-cli

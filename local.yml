@@ -62,5 +62,9 @@
       tags:
         - install
         - hermes
+    - include_tasks: tasks/signal-cli.yml
+      tags:
+        - install
+        - signal-cli
     - include_tasks: tasks/llama.yml
     - include_tasks: tasks/rider.yml
