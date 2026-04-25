@@ -43,18 +43,23 @@ kept out of git.
 ### Signal CLI
 
 If you're routing Signal through the Hermes gateway, signal-cli must be
-linked to your Signal account before the daemon can run:
+linked to your Signal account before the daemon can run.
+
+`signal-cli link` itself only emits the device-link URI as plain text in
+v0.14.3 (upstream PR #1927 would add in-terminal QR rendering but isn't
+released yet). Use the `signal:link` mise task instead — it pipes the URI
+through `qrencode` to produce a scannable QR:
 
 ```bash
-# Scan the QR code with your phone (Signal → Settings → Linked Devices)
-signal-cli link -n "HermesAgent"
+# Scan the QR with your phone (Signal → Settings → Linked Devices)
+mise run signal:link HermesAgent
 ```
 
-After linking, re-run the play to enable the signal-cli HTTP daemon:
+After the link completes, re-run the play to enable the HTTP daemon:
 
 ```bash
 ansible-playbook local.yml --tags signal-cli
 ```
 
 The daemon listens on `localhost:8080` and serves every linked account on
-this host, which is what `hermes gateway` expects.
+this host, which is the URL `hermes gateway setup` defaults to for Signal.

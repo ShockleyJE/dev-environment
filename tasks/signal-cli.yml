@@ -1,3 +1,18 @@
+# qrencode renders the link URI as a scannable QR. signal-cli's `link`
+# subcommand only emits the URI as plain text in v0.14.3 (PR #1927 would
+# add in-terminal QR rendering but isn't released yet), so we generate
+# the QR locally with qrencode in the `signal:link` mise task.
+- name: Install qrencode for signal-cli device-linking QR (Ubuntu)
+  ansible.builtin.apt:
+    name: qrencode
+    state: present
+    update_cache: false
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - signal-cli
+
 - name: Verify signal-cli is on PATH (Ubuntu)
   ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.local/bin/mise which signal-cli"
   register: signal_cli_which
@@ -46,9 +61,9 @@
     msg: |
       No linked signal-cli account found. The daemon will not start until
       this host is linked to a Signal account. Run once interactively
-      (this scans a QR code with your phone):
+      (renders a QR via qrencode for your phone to scan):
 
-          signal-cli link -n "HermesAgent"
+          mise run signal:link HermesAgent
 
       Then re-run: ansible-playbook local.yml --tags signal-cli
   when:
