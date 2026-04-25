@@ -316,20 +316,22 @@ git commit -m "feat(systemd): add hermes gateway unit"
 
 ---
 
-## Task 5: Wire the unit into `setup-all-services.sh`
+## Task 5: Wire the unit into the bootstrap (revised)
 
 **Purpose:** Make the existing dotfiles bootstrap install the new unit alongside the others.
 
-**Files:**
-- Modify: `/home/james/.dotfiles/systemd/setup-all-services.sh`
+**Deviation note (executed 2026-04-25):** `systemd/setup-all-services.sh` was deleted in `.dotfiles@ad6277e` (Sept 2025) and replaced by generic mise tasks under `mise/.config/mise/tasks/systemd/`. The `register_systemd_services()` function in `/home/james/.dotfiles/ubuntu` still referenced the deleted script and printed a warning + skipped systemd registration entirely on every fresh provision. Task 5 was redirected to fix the stale reference: replace the function body with calls to `mise run systemd:sync` (copies every `systemd/units/*` file to `~/.config/systemd/user/`) and `mise run systemd:enable-target`. The new generic tasks pick up `dotfiles-hermes-gateway.service` automatically — no per-unit edit needed. The unit is staged but NOT enabled; ansible Task 6 enables it conditionally on the gateway credential marker.
 
-- [ ] **Step 1: Read the current script to find the conventions**
+**Files:**
+- Modify: `/home/james/.dotfiles/ubuntu` (function `register_systemd_services()`)
+
+- [ ] **Step 1: Read the current `register_systemd_services()` function**
 
 ```bash
-cat /home/james/.dotfiles/systemd/setup-all-services.sh
+sed -n '/^register_systemd_services/,/^}/p' /home/james/.dotfiles/ubuntu
 ```
 
-Identify the loop or sequence that copies each unit into `~/.config/systemd/user/`. Most installations follow the pattern: `cp` the `.service` file, then `systemctl --user daemon-reload`. Note whether the script `enable`s units; if it does, our new unit must be **excluded** from auto-enable (per the spec, ansible enables it conditionally).
+Note the existing structure (echo banner, check that the systemd dir exists, check for the script, run it). The function references `setup-all-services.sh`, which was deleted.
 
 - [ ] **Step 2: Add the copy step for `dotfiles-hermes-gateway.service`**
 
