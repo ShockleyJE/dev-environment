@@ -20,26 +20,6 @@ A few interactive credential / device-linking steps must be run by hand,
 once per host. The ansible play warns you when each one is needed and
 otherwise continues without failure.
 
-### Hermes Agent
-
-```bash
-# Provider API keys (OpenRouter / Nous Portal / OpenAI / etc.)
-mise exec -- hermes setup
-
-# Messaging platform tokens (Telegram / Discord / Slack / etc.)
-mise exec -- hermes gateway setup
-```
-
-After both, re-run the play to install and start the gateway service:
-
-```bash
-ansible-playbook local.yml --tags hermes
-```
-
-See `~/.dotfiles/README.md` (the "Hermes Agent" section) for what each
-command writes into `~/.hermes/` and how the resulting credentials are
-kept out of git.
-
 ### Signal CLI
 
 If you're routing Signal through the Hermes gateway, signal-cli must be
