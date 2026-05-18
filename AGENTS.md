@@ -17,6 +17,7 @@
 - Using mise tasks: `mise fedora` (host) • `mise test:fedora` (Docker test)
 - Dry run / audit: `ansible-playbook local.yml --check --diff`
 
+<!-- codestyle-id: dev-environment-agents-coding-style-naming-conventions -->
 ## Coding Style & Naming Conventions
 - Ansible YAML: 2‑space indentation, kebab-case task names, idempotent tasks, use `tags`.
 - Shell scripts: `bash` or `zsh` with `set -euo pipefail` (where applicable); keep scripts executable.

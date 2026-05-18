@@ -124,6 +124,17 @@
     - code
     - vscode
 
+- name: Install Zed editor (Ubuntu)
+  shell: curl -fsSL https://zed.dev/install.sh | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/zed"
+  become: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - code
+    - zed
+
 - name: Add Microsoft repository (Fedora)
   yum_repository:
     name: vscode

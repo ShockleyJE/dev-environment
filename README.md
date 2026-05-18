@@ -43,3 +43,23 @@ ansible-playbook local.yml --tags signal-cli
 
 The daemon listens on `localhost:8080` and serves every linked account on
 this host, which is the URL `hermes gateway setup` defaults to for Signal.
+
+### Proton Mail Bridge
+
+```bash
+# Log in interactively (username, password, 2FA)
+protonmail-bridge --cli
+```
+
+At the `>>> ` prompt, run `login`, complete the flow, then `quit`.
+After login, re-run the play to enable the background service:
+
+```bash
+ansible-playbook local.yml --tags proton-bridge
+```
+
+Bridge then runs as a user-level systemd unit, exposing IMAP on
+`127.0.0.1:1143` and SMTP on `127.0.0.1:1025`. Config is persisted via
+the `protonmail` stow package in `~/.dotfiles/`. See
+[`~/.dotfiles/README.md`](https://github.com/ShockleyJE/.dotfiles) for
+the full stow layout and service controls.

@@ -1,6 +1,14 @@
+- name: Compute NVIDIA CUDA repo distro suffix from host
+  set_fact:
+    cuda_repo_distro: "ubuntu{{ ansible_facts.distribution_version | replace('.', '') }}"
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
 - name: Download NVIDIA CUDA keyring package
   get_url:
-    url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+    url: "https://developer.download.nvidia.com/compute/cuda/repos/{{ cuda_repo_distro }}/x86_64/cuda-keyring_1.1-1_all.deb"
     dest: /tmp/cuda-keyring_1.1-1_all.deb
     mode: '0644'
   become: true
@@ -19,9 +27,38 @@
     - install
     - cuda
 
+# M1 NVIDIA hardening (project: dev-env-nvidia-hardening, milestone 1):
+# The cuda-keyring deb installs /etc/apt/preferences.d/cuda-repository-pin-600
+# with `Package: *` priority 600, which makes every NVIDIA-repo nvidia-* and
+# cuda-drivers* package the candidate for installed Ubuntu-archive equivalents.
+# This caused `apt upgrade` to attempt cross-source / cross-branch driver
+# transitions and loop on the nvidia-kernel-common virtual conflict.
+# This task negates NVIDIA's repo as a candidate source for the host driver
+# universe (specific packages override the wildcard pin per apt_preferences(5)),
+# leaving Ubuntu's archive (priority 500) as the only source for those packages.
+# cuda-toolkit-* and other userland CUDA packages remain at priority 600 from
+# NVIDIA's repo, so the toolkit install path is unaffected.
+- name: Scope NVIDIA CUDA repo pin to exclude host driver universe (M1 hardening)
+  copy:
+    dest: /etc/apt/preferences.d/cuda-driver-from-ubuntu-archive
+    content: |
+      # Managed by dev-environment Ansible playbook (M1 NVIDIA hardening).
+      # See repos/obsidian/Project - Dev-Environment NVIDIA Install Hardening.md
+      Package: nvidia-driver-* nvidia-kernel-common-* nvidia-kernel-source-* nvidia-dkms-* nvidia-utils-* nvidia-firmware-* nvidia-compute-utils-* libnvidia-* xserver-xorg-video-nvidia-* cuda-drivers cuda-drivers-*
+      Pin: origin developer.download.nvidia.com
+      Pin-Priority: 100
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
 - name: Add NVIDIA CUDA repository
   apt_repository:
-    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/{{ cuda_repo_distro }}/x86_64/ /"
     state: present
     filename: cuda
   become: true
@@ -45,6 +82,142 @@
     state: present
   become: true
   when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+# M1 NVIDIA hardening: hold the installed driver-branch packages so apt upgrade
+# never silently attempts a cross-branch transition (580 -> 590 -> ...). Each
+# branch bump must be a deliberate playbook edit + unhold + reinstall. Held
+# packages are a no-op upgrade target, NOT excluded from `apt upgrade`'s
+# success path — the scoped pin above ensures NVIDIA-repo cross-branch
+# candidates stay at priority 100.
+#
+# Branch history:
+# - 2026-05-06: M1 implemented at branch 570 (Ubuntu archive shipped 570 as
+#   the noble-updates HWE driver at kernel 6.17.0-22).
+# - 2026-05-12: Canonical's HWE-driver track transitioned the
+#   linux-modules-nvidia-570-generic-hwe-24.04 meta to depend on branch-580
+#   modules at kernel 6.17.0-23. Embraced branch 580 (see M1 doc 2026-05-12
+#   log entry); legacy branch-570 holds released so apt autoremove can
+#   reclaim them on the operator's next cleanup pass.
+- name: Release legacy branch-570 holds (one-shot, 2026-05-12 branch transition)
+  ansible.builtin.shell: |
+    set -e
+    for pkg in nvidia-driver-570 nvidia-kernel-common-570 nvidia-dkms-570; do
+      if dpkg -l "$pkg" 2>/dev/null | grep -q '^hi  '; then
+        apt-mark unhold "$pkg" >/dev/null
+      fi
+    done
+  become: true
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Hold NVIDIA driver branch 580 packages (M1 hardening)
+  ansible.builtin.shell: |
+    set -e
+    held=0
+    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
+      if dpkg -l "$pkg" 2>/dev/null | grep -q '^ii  '; then
+        apt-mark hold "$pkg" >/dev/null
+        held=$((held + 1))
+      fi
+    done
+    echo "held=$held"
+  become: true
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  register: nvidia_hold_result
+  tags:
+    - install
+    - cuda
+
+- name: Display NVIDIA driver hold status
+  debug:
+    msg: "NVIDIA driver hold: {{ nvidia_hold_result.stdout }}"
+  when: ansible_facts.distribution == "Ubuntu" and nvidia_hold_result is defined
+  tags:
+    - install
+    - cuda
+
+# M1 NVIDIA hardening — kernel-side companion to the userland driver hold.
+# The hold above pins nvidia-driver-580 / nvidia-kernel-common-580 / nvidia-dkms-580
+# at branch 580 from the Ubuntu archive. It does NOT pin the per-kernel module
+# package (linux-modules-nvidia-580-<kernel-version>-generic), which is what
+# actually gets loaded by `modprobe nvidia`. The HWE metapackage
+# `linux-modules-nvidia-580-generic-hwe-24.04` tracks the running HWE kernel
+# and pulls in the matching per-kernel module on upgrade. Without this block,
+# an HWE kernel ABI bump (e.g. 6.17.0-23 -> next ABI) leaves the host with no
+# matching nvidia kernel module — `apt upgrade` (conservative) keeps the
+# metapackage back, so `lsmod | grep nvidia` is empty after reboot and
+# nvidia-smi / NVENC fail until the next `apt full-upgrade`.
+#
+# R4 says "branch-pinned via Ubuntu archive OR apt-mark hold". M1 chose hold,
+# which is coarser than the intent: a within-branch update of nvidia-kernel-common-580
+# from noble-updates is required whenever a new per-kernel module package is
+# published, but the hold blocks it. We unhold the branch-580 userland
+# packages, run the controlled upgrade (Ubuntu archive only — NVIDIA-repo
+# cross-branch candidates stay at priority 100 via the scoped pin above),
+# then re-hold to restore the apt-upgrade guard. Net effect: `apt upgrade`
+# still cannot bump branches, but the playbook can do a deliberate
+# within-branch reconciliation.
+- name: Unhold NVIDIA branch 580 packages for controlled within-branch upgrade
+  ansible.builtin.shell: |
+    set -e
+    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
+      if dpkg -l "$pkg" 2>/dev/null | grep -q '^hi  '; then
+        apt-mark unhold "$pkg" >/dev/null
+      fi
+    done
+  become: true
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Ensure NVIDIA branch-580 kernel module + within-branch driver updates
+  apt:
+    name:
+      - linux-modules-nvidia-580-generic-hwe-24.04
+      - nvidia-driver-580
+      - nvidia-kernel-common-580
+      - nvidia-kernel-source-580
+    state: latest
+    install_recommends: false
+  become: true
+  when: ansible_facts.distribution == "Ubuntu"
+  register: nvidia_kmod_result
+  tags:
+    - install
+    - cuda
+
+- name: Re-hold NVIDIA branch 580 packages after controlled upgrade
+  ansible.builtin.shell: |
+    set -e
+    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
+      if dpkg -l "$pkg" 2>/dev/null | grep -q '^ii  '; then
+        apt-mark hold "$pkg" >/dev/null
+      fi
+    done
+  become: true
+  changed_when: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - cuda
+
+- name: Load nvidia kernel module if newly installed
+  community.general.modprobe:
+    name: nvidia
+    state: present
+  become: true
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - nvidia_kmod_result is changed
   tags:
     - install
     - cuda

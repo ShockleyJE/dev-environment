@@ -14,6 +14,7 @@
       with_items:
         - /etc/apt/sources.list.d/cuda.list
         - /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list
+        - /etc/apt/sources.list.d/cuda-ubuntu2404-x86_64.list
         - /etc/apt/sources.list.d/nvidia-cuda.list
       tags:
         - install
@@ -47,6 +48,7 @@
         - install
         - code
         - vscode
+        - zed
     - include_tasks: tasks/git-setup.yml
     - include_tasks: tasks/personal.yml
       tags:
@@ -55,6 +57,9 @@
         - communication
         - install
     - include_tasks: tasks/cuda.yml
+      tags:
+        - install
+        - cuda
     - include_tasks: tasks/models.yml
     - include_tasks: tasks/redis.yml
     - include_tasks: tasks/utility-repos.yml
@@ -63,4 +68,9 @@
         - install
         - signal-cli
     - include_tasks: tasks/llama.yml
+    - include_tasks: tasks/proton-bridge.yml
+      tags:
+        - install
+        - proton-bridge
+        - communication
     - include_tasks: tasks/rider.yml

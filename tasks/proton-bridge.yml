@@ -1,0 +1,130 @@
+# Proton Mail Bridge — downloads the latest .deb from GitHub releases and
+# installs it.  Bridge requires an interactive first-login (GNOME keyring +
+# Proton credentials), so the task warns-and-continues when no account is
+# configured yet — matching the hermes.yml / signal-cli.yml pattern.
+
+- name: Check if protonmail-bridge is already installed (Ubuntu)
+  ansible.builtin.command: dpkg-query -W -f='${Version}' protonmail-bridge
+  register: bridge_installed
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Fetch latest protonmail-bridge release version from GitHub (Ubuntu)
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest
+    return_content: true
+    headers:
+      Accept: application/vnd.github+json
+  register: bridge_release
+  failed_when: false
+  changed_when: false
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_installed.rc != 0
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Set bridge version fact (Ubuntu)
+  ansible.builtin.set_fact:
+    bridge_version: "{{ (bridge_release.json.tag_name | default('v0'))[1:] }}"
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_installed.rc != 0
+    - bridge_release is defined
+    - bridge_release is not skipped
+    - bridge_release.status | default(0) == 200
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Download protonmail-bridge .deb (Ubuntu)
+  ansible.builtin.get_url:
+    url: "https://github.com/ProtonMail/proton-bridge/releases/download/v{{ bridge_version }}/protonmail-bridge_{{ bridge_version }}-1_amd64.deb"
+    dest: "/tmp/protonmail-bridge_{{ bridge_version }}-1_amd64.deb"
+    mode: "0644"
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_installed.rc != 0
+    - bridge_version is defined
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Install protonmail-bridge from .deb (Ubuntu)
+  ansible.builtin.apt:
+    deb: "/tmp/protonmail-bridge_{{ bridge_version }}-1_amd64.deb"
+    state: present
+  become: true
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_installed.rc != 0
+    - bridge_version is defined
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Clean up protonmail-bridge .deb installer (Ubuntu)
+  ansible.builtin.file:
+    path: "/tmp/protonmail-bridge_{{ bridge_version }}-1_amd64.deb"
+    state: absent
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_version is defined
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+# After install, check whether the user has logged in at least once.
+# Bridge writes its vault config on first successful login.
+- name: Stat Bridge vault config marker (Ubuntu)
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.config/protonmail/bridge-v3/vault.enc.json"
+  register: bridge_vault_marker
+  when: ansible_facts.distribution == "Ubuntu"
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Warn if Proton Bridge has not been logged in yet (Ubuntu)
+  ansible.builtin.debug:
+    msg: |
+      Proton Mail Bridge is installed but no account is configured yet.
+      Run the bridge once interactively to log in:
+
+          protonmail-bridge --cli
+
+      Then re-run: ansible-playbook local.yml --tags proton-bridge
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - not (bridge_vault_marker.stat.exists | default(false))
+  tags:
+    - install
+    - proton-bridge
+    - communication
+
+- name: Enable and start proton-bridge user service (Ubuntu)
+  ansible.builtin.systemd:
+    name: dotfiles-proton-bridge.service
+    scope: user
+    enabled: true
+    state: started
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - bridge_vault_marker.stat.exists | default(false)
+  tags:
+    - install
+    - proton-bridge
+    - communication
