@@ -86,12 +86,13 @@
     - install
     - cuda
 
-# M1 NVIDIA hardening: hold the installed driver-branch packages so apt upgrade
-# never silently attempts a cross-branch transition (580 -> 590 -> ...). Each
-# branch bump must be a deliberate playbook edit + unhold + reinstall. Held
-# packages are a no-op upgrade target, NOT excluded from `apt upgrade`'s
-# success path — the scoped pin above ensures NVIDIA-repo cross-branch
-# candidates stay at priority 100.
+# M1 NVIDIA hardening: keep the host driver universe sourced from Ubuntu's
+# archive and keep the selected branch explicit in this playbook. Do not
+# apt-mark hold the exact-version branch packages: Ubuntu's HWE NVIDIA module
+# metapackage requires matching within-branch userland updates whenever a new
+# kernel ABI lands. Holding nvidia-driver-580 or nvidia-kernel-common-580 at an
+# old exact version leaves a new booted kernel without a loadable nvidia module,
+# which breaks nvidia-smi and OBS/NVENC.
 #
 # Branch history:
 # - 2026-05-06: M1 implemented at branch 570 (Ubuntu archive shipped 570 as
@@ -116,19 +117,19 @@
     - install
     - cuda
 
-- name: Hold NVIDIA driver branch 580 packages (M1 hardening)
+- name: Release stale NVIDIA branch 580 holds
   ansible.builtin.shell: |
     set -e
-    held=0
-    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
-      if dpkg -l "$pkg" 2>/dev/null | grep -q '^ii  '; then
-        apt-mark hold "$pkg" >/dev/null
-        held=$((held + 1))
+    released=0
+    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-kernel-source-580 nvidia-dkms-580; do
+      if apt-mark showhold | grep -qx "$pkg"; then
+        apt-mark unhold "$pkg" >/dev/null
+        released=$((released + 1))
       fi
     done
-    echo "held=$held"
+    echo "released=$released"
   become: true
-  changed_when: false
+  changed_when: "'released=0' not in nvidia_hold_result.stdout"
   when: ansible_facts.distribution == "Ubuntu"
   register: nvidia_hold_result
   tags:
@@ -139,42 +140,6 @@
   debug:
     msg: "NVIDIA driver hold: {{ nvidia_hold_result.stdout }}"
   when: ansible_facts.distribution == "Ubuntu" and nvidia_hold_result is defined
-  tags:
-    - install
-    - cuda
-
-# M1 NVIDIA hardening — kernel-side companion to the userland driver hold.
-# The hold above pins nvidia-driver-580 / nvidia-kernel-common-580 / nvidia-dkms-580
-# at branch 580 from the Ubuntu archive. It does NOT pin the per-kernel module
-# package (linux-modules-nvidia-580-<kernel-version>-generic), which is what
-# actually gets loaded by `modprobe nvidia`. The HWE metapackage
-# `linux-modules-nvidia-580-generic-hwe-24.04` tracks the running HWE kernel
-# and pulls in the matching per-kernel module on upgrade. Without this block,
-# an HWE kernel ABI bump (e.g. 6.17.0-23 -> next ABI) leaves the host with no
-# matching nvidia kernel module — `apt upgrade` (conservative) keeps the
-# metapackage back, so `lsmod | grep nvidia` is empty after reboot and
-# nvidia-smi / NVENC fail until the next `apt full-upgrade`.
-#
-# R4 says "branch-pinned via Ubuntu archive OR apt-mark hold". M1 chose hold,
-# which is coarser than the intent: a within-branch update of nvidia-kernel-common-580
-# from noble-updates is required whenever a new per-kernel module package is
-# published, but the hold blocks it. We unhold the branch-580 userland
-# packages, run the controlled upgrade (Ubuntu archive only — NVIDIA-repo
-# cross-branch candidates stay at priority 100 via the scoped pin above),
-# then re-hold to restore the apt-upgrade guard. Net effect: `apt upgrade`
-# still cannot bump branches, but the playbook can do a deliberate
-# within-branch reconciliation.
-- name: Unhold NVIDIA branch 580 packages for controlled within-branch upgrade
-  ansible.builtin.shell: |
-    set -e
-    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
-      if dpkg -l "$pkg" 2>/dev/null | grep -q '^hi  '; then
-        apt-mark unhold "$pkg" >/dev/null
-      fi
-    done
-  become: true
-  changed_when: false
-  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - cuda
@@ -191,21 +156,6 @@
   become: true
   when: ansible_facts.distribution == "Ubuntu"
   register: nvidia_kmod_result
-  tags:
-    - install
-    - cuda
-
-- name: Re-hold NVIDIA branch 580 packages after controlled upgrade
-  ansible.builtin.shell: |
-    set -e
-    for pkg in nvidia-driver-580 nvidia-kernel-common-580 nvidia-dkms-580; do
-      if dpkg -l "$pkg" 2>/dev/null | grep -q '^ii  '; then
-        apt-mark hold "$pkg" >/dev/null
-      fi
-    done
-  become: true
-  changed_when: false
-  when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
     - cuda
@@ -265,4 +215,4 @@
   when: ansible_facts.distribution == "Ubuntu"
   tags:
     - install
-    - cuda 
+    - cuda
