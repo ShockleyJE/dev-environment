@@ -60,14 +60,12 @@
       tags:
         - install
         - cuda
-    - include_tasks: tasks/models.yml
     - include_tasks: tasks/redis.yml
     - include_tasks: tasks/utility-repos.yml
     - include_tasks: tasks/signal-cli.yml
       tags:
         - install
         - signal-cli
-    - include_tasks: tasks/llama.yml
     - include_tasks: tasks/proton-bridge.yml
       tags:
         - install
