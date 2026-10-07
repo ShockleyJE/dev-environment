@@ -14,6 +14,22 @@ For contributor guidance (style, tests, commit conventions), see
 that repo's [`README.md`](https://github.com/ShockleyJE/.dotfiles) for what
 gets symlinked into `$HOME` on a fresh provision.
 
+## Kernel and NVIDIA driver updates are manual
+
+On Ubuntu the play stops unattended-upgrades from touching kernel and NVIDIA
+driver packages (`tasks/kernel-updates.yml`, tag `kernel`). Left alone, it
+installed new kernels from `noble-security` whose signed NVIDIA module needed a
+driver only in `noble-updates`, so the next boot had no GPU driver. Update them
+by hand instead:
+
+```bash
+mise run kernel:upgrade --dry-run   # what would change + is the next boot kernel OK?
+mise run kernel:upgrade             # apt full-upgrade, refusing a kernel without its NVIDIA module
+```
+
+The task lives in `~/.dotfiles` (`mise/.config/mise/tasks/kernel/upgrade`).
+Reboot only after it reports `OK`.
+
 ## Manual setup steps the playbook can't automate
 
 A few interactive credential / device-linking steps must be run by hand,
