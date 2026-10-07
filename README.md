@@ -20,15 +20,14 @@ On Ubuntu the play stops unattended-upgrades from touching kernel and NVIDIA
 driver packages (`tasks/kernel-updates.yml`, tag `kernel`). Left alone, it
 installed new kernels from `noble-security` whose signed NVIDIA module needed a
 driver only in `noble-updates`, so the next boot had no GPU driver. Update them
-by hand instead:
+by hand instead, then reboot:
 
 ```bash
-mise run kernel:upgrade --dry-run   # what would change + is the next boot kernel OK?
-mise run kernel:upgrade             # apt full-upgrade, refusing a kernel without its NVIDIA module
+sudo apt update && sudo apt full-upgrade
 ```
 
-The task lives in `~/.dotfiles` (`mise/.config/mise/tasks/kernel/upgrade`).
-Reboot only after it reports `OK`.
+A manual upgrade uses every pocket, so each kernel arrives together with its
+NVIDIA module.
 
 ## Manual setup steps the playbook can't automate
 

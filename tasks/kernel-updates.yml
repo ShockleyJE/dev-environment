@@ -10,8 +10,9 @@
 # 6.17.0-23, -29, -35, 7.0.0-28 and 7.0.0-34.
 #
 # The blacklist only affects unattended-upgrades; it is not an apt-mark hold,
-# so `apt upgrade` and `mise run kernel:upgrade` (dotfiles) still move these
-# packages. The NVIDIA userland is listed too because it must match the kernel
+# so `sudo apt update && sudo apt full-upgrade` still moves these packages, and
+# because it uses every pocket it brings each kernel together with its NVIDIA
+# module and the driver that module needs. The NVIDIA userland is listed too because it must match the kernel
 # module version exactly; letting it update alone would break nvidia-smi with a
 # driver/library version mismatch. Its package list mirrors the driver universe
 # pinned in tasks/cuda.yml. linux-firmware, linux-libc-dev and linux-tools-common
@@ -21,7 +22,7 @@
     dest: /etc/apt/apt.conf.d/51unattended-upgrades-kernel-by-hand
     content: |
       // Managed by dev-environment Ansible playbook (tasks/kernel-updates.yml).
-      // Kernel and NVIDIA driver updates are manual: `mise run kernel:upgrade`.
+      // Kernel and NVIDIA driver updates are manual: `sudo apt update && sudo apt full-upgrade`.
       Unattended-Upgrade::Package-Blacklist {
           "linux-generic";
           "linux-image-";
